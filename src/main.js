@@ -178,6 +178,10 @@ async function loadFile(file) {
   setAspect(state.aspect === 'free' && isFitMode() ? 'original' : state.aspect);
   layoutStage();
   updateTrimUI();
+
+  // re-measure once layout has settled after the editor became visible
+  requestAnimationFrame(layoutStage);
+  setTimeout(layoutStage, 120);
 }
 
 els.dropZone.addEventListener('click', () => els.fileInput.click());
@@ -215,9 +219,9 @@ function clearResult() {
 // inside the element), which keeps crop-overlay math linear.
 function layoutStage() {
   if (!state.srcW) return;
-  const outer = els.stageOuter.getBoundingClientRect();
-  const availW = outer.width;
-  const availH = outer.height;
+  const availW = els.stageOuter.clientWidth;
+  const availH = els.stageOuter.clientHeight;
+  if (!availW || !availH) return;
 
   let arW = state.srcW, arH = state.srcH;
   if (isFitMode()) {
