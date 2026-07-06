@@ -66,7 +66,7 @@ export function drawOverlayContain(ctx, bitmap, outW, outH) {
 
 /**
  * Draws a fit-mode composite frame onto ctx.
- * bg: { type: 'blur', blurPx } | { type: 'color', color }
+ * bg: { type: 'blur', blurPx, brightness (0-100) } | { type: 'color', color }
  * drawFrame(dx, dy, dw, dh, targetCtx?) draws the current video frame.
  */
 export function drawComposite(ctx, outW, outH, srcW, srcH, bg, drawFrame, fallbackCanvas, overlayBitmap, zoom = 0) {
@@ -104,6 +104,12 @@ export function drawComposite(ctx, outW, outH, srcW, srcH, bg, drawFrame, fallba
     ctx.drawImage(tmp, 0, 0, outW, outH);
   }
 
+  // dim the background before the foreground goes on top
+  if (bg.type === 'blur' && bg.brightness != null && bg.brightness < 100) {
+    ctx.fillStyle = `rgba(0, 0, 0, ${1 - Math.max(0, bg.brightness) / 100})`;
+    ctx.fillRect(0, 0, outW, outH);
+  }
+
   const { fg } = layout;
   drawFrame(fg.dx, fg.dy, fg.dw, fg.dh);
 
@@ -137,8 +143,8 @@ export function exportVideo(opts, onProgress) {
 
   const promise = (async () => {
     const {
-      file, mode, crop, srcW, srcH, aspect,
-      trimStart, trimEnd, duration, blurAmount, zoom, bgColor, quality, overlay,
+      file, mode, crop, srcW, srcH, aspect, trimStart, trimEnd, duration,
+      blurAmount, bgBrightness, zoom, bgColor, quality, overlay,
     } = opts;
 
     const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -180,7 +186,11 @@ export function exportVideo(opts, onProgress) {
       const ctx = canvas.getContext('2d');
       const fallbackCanvas = new OffscreenCanvas(2, 2);
       const bg = mode === 'blur'
-        ? { type: 'blur', blurPx: (blurAmount * Math.max(outW, outH)) / 1080 }
+        ? {
+            type: 'blur',
+            blurPx: (blurAmount * Math.max(outW, outH)) / 1080,
+            brightness: bgBrightness ?? 100,
+          }
         : { type: 'color', color: bgColor || '#000000' };
       videoOptions = {
         process: (sample) => {

@@ -31,6 +31,8 @@ const els = {
   blurGroup: $('blur-group'),
   blurSlider: $('blur-slider'),
   blurVal: $('blur-val'),
+  brightnessSlider: $('brightness-slider'),
+  brightnessVal: $('brightness-val'),
   colorGroup: $('color-group'),
   colorPicker: $('color-picker'),
   colorVal: $('color-val'),
@@ -85,6 +87,7 @@ const state = {
   trimStart: 0,
   trimEnd: 0,
   blurAmount: 40,
+  bgBrightness: 100,
   zoom: 0,
   bgColor: '#000000',
   overlay: null, // { bitmap, name, url }
@@ -431,7 +434,11 @@ function drawPreviewFrame() {
   const cw = els.blurPreview.width;
   const ch = els.blurPreview.height;
   const bg = state.mode === 'blur'
-    ? { type: 'blur', blurPx: (state.blurAmount * Math.max(cw, ch)) / 1080 }
+    ? {
+        type: 'blur',
+        blurPx: (state.blurAmount * Math.max(cw, ch)) / 1080,
+        brightness: state.bgBrightness,
+      }
     : { type: 'color', color: state.bgColor };
   const draw = (dx, dy, dw, dh, targetCtx) =>
     (targetCtx || previewCtx).drawImage(els.video, dx, dy, dw, dh);
@@ -444,6 +451,11 @@ function drawPreviewFrame() {
 els.blurSlider.addEventListener('input', () => {
   state.blurAmount = Number(els.blurSlider.value);
   els.blurVal.textContent = state.blurAmount;
+});
+
+els.brightnessSlider.addEventListener('input', () => {
+  state.bgBrightness = Number(els.brightnessSlider.value);
+  els.brightnessVal.textContent = state.bgBrightness;
 });
 
 els.zoomSlider.addEventListener('input', () => {
@@ -668,6 +680,7 @@ async function doExport() {
       trimEnd: state.trimEnd,
       duration: state.duration,
       blurAmount: state.blurAmount,
+      bgBrightness: state.bgBrightness,
       zoom: state.zoom,
       bgColor: state.bgColor,
       quality: els.qualitySelect.value,
