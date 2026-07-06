@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Local Video Cropper</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo-mark" aria-hidden="true">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2v14a2 2 0 0 0 2 2h14" />
+        <path d="M18 22V8a2 2 0 0 0-2-2H2" />
+      </svg>
+    </div>
+    <h1>Local Video Cropper</h1>
+    <p>Crop, reframe &amp; trim — nothing leaves your browser</p>
+  </header>
+
+  <main>
+    <!-- Recents sidebar -->
+    <aside id="sidebar">
+      <button id="open-btn" class="secondary">Open video…</button>
+      <div class="sb-label">Recent</div>
+      <div id="recent-list"></div>
+      <p id="recent-empty" class="ctl-hint">Videos you open appear here for one-click reopening. Stored only in this browser.</p>
+    </aside>
+
+    <div id="content">
+    <!-- Drop zone (initial view) -->
+    <section id="drop-zone">
+      <div class="dz-inner">
+        <div class="dz-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3" />
+            <path d="M2 9h20M2 15h20M7 4v16M17 4v16" />
+          </svg>
+        </div>
+        <p><strong>Drop a video here</strong> or click to choose a file</p>
+        <p class="dz-hint">MP4, MOV, WebM, MKV — processed entirely on your device</p>
+      </div>
+      <input type="file" id="file-input" accept="video/*,.mkv" hidden />
+    </section>
+
+    <!-- Editor (after load) -->
+    <section id="editor" hidden>
+      <div class="stage-col">
+        <div id="stage-outer">
+          <div id="stage">
+            <video id="video" playsinline preload="auto"></video>
+            <canvas id="blur-preview" hidden></canvas>
+            <div id="crop-overlay">
+              <div id="crop-rect">
+                <img id="overlay-img" alt="" hidden />
+                <div class="handle nw" data-handle="nw"></div>
+                <div class="handle ne" data-handle="ne"></div>
+                <div class="handle sw" data-handle="sw"></div>
+                <div class="handle se" data-handle="se"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timeline / trim -->
+        <div id="timeline">
+          <button id="play-btn" title="Play / pause (Space)">▶</button>
+          <div id="tl-track">
+            <div id="tl-range"></div>
+            <div id="tl-playhead"></div>
+            <div id="tl-handle-start" class="tl-handle" title="Trim start"></div>
+            <div id="tl-handle-end" class="tl-handle" title="Trim end"></div>
+          </div>
+        </div>
+        <div id="tl-times">
+          <span>In <b id="time-start">0:00.0</b></span>
+          <span id="time-current">0:00.0</span>
+          <span>Out <b id="time-end">0:00.0</b> · Length <b id="time-length">0:00.0</b></span>
+        </div>
+      </div>
+
+      <aside id="controls">
+        <div class="ctl-group">
+          <label class="ctl-label">Mode</label>
+          <div class="seg" id="mode-seg">
+            <button data-mode="crop" class="active">Crop</button>
+            <button data-mode="blur">Fit&#8202;+&#8202;blur</button>
+            <button data-mode="color">Fit&#8202;+&#8202;color</button>
+          </div>
+          <p class="ctl-hint" id="mode-hint">Cut out a region of the frame.</p>
+        </div>
+
+        <div class="ctl-group">
+          <label class="ctl-label">Aspect ratio</label>
+          <div class="aspect-grid" id="aspect-grid"></div>
+        </div>
+
+        <div class="ctl-group" id="blur-group" hidden>
+          <label class="ctl-label">Background blur <span id="blur-val">40</span></label>
+          <input type="range" id="blur-slider" min="0" max="100" value="40" />
+        </div>
+
+        <div class="ctl-group" id="color-group" hidden>
+          <label class="ctl-label">Background color</label>
+          <div class="color-row">
+            <input type="color" id="color-picker" value="#000000" />
+            <span id="color-val">#000000</span>
+          </div>
+        </div>
+
+        <div class="ctl-group">
+          <label class="ctl-label">Overlay</label>
+          <button id="overlay-btn" class="secondary">Add PNG overlay</button>
+          <div id="overlay-row" hidden>
+            <span id="overlay-name"></span>
+            <button id="overlay-remove" title="Remove overlay">✕</button>
+          </div>
+          <p class="ctl-hint">Transparent PNG, scaled to fit the output frame.</p>
+          <input type="file" id="overlay-input" accept="image/png,image/webp" hidden />
+        </div>
+
+        <div class="ctl-group">
+          <label class="ctl-label">Quality</label>
+          <select id="quality-select">
+            <option value="medium">Medium (smaller file)</option>
+            <option value="high" selected>High</option>
+            <option value="very_high">Very high (bigger file)</option>
+          </select>
+        </div>
+
+        <div class="ctl-group">
+          <div class="out-info">
+            <span id="src-info"></span>
+            <span id="out-info"></span>
+          </div>
+        </div>
+
+        <button id="export-btn" class="primary">Export MP4</button>
+        <button id="cancel-btn" hidden>Cancel export</button>
+
+        <div id="progress-wrap" hidden>
+          <div id="progress-bar"><div id="progress-fill"></div></div>
+          <span id="progress-text">0%</span>
+        </div>
+
+        <div id="result" hidden>
+          <video id="result-video" controls playsinline></video>
+          <a id="download-link" class="primary btn-link" download>Save video</a>
+          <span id="result-info"></span>
+        </div>
+
+        <div id="error-box" hidden></div>
+
+        <button id="new-file-btn" class="ghost">Open another video</button>
+      </aside>
+    </section>
+    </div>
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
