@@ -58,6 +58,8 @@ const els = {
   zoomGroup: $('zoom-group'),
   zoomSlider: $('zoom-slider'),
   zoomVal: $('zoom-val'),
+  positionSlider: $('position-slider'),
+  positionVal: $('position-val'),
 };
 
 const ASPECTS = [
@@ -89,6 +91,7 @@ const state = {
   blurAmount: 40,
   bgBrightness: 100,
   zoom: 0,
+  position: 0,
   bgColor: '#000000',
   overlay: null, // { bitmap, name, url }
   exporting: false,
@@ -444,7 +447,7 @@ function drawPreviewFrame() {
     (targetCtx || previewCtx).drawImage(els.video, dx, dy, dw, dh);
   drawComposite(
     previewCtx, cw, ch, state.srcW, state.srcH,
-    bg, draw, fallbackPreviewCanvas, state.overlay?.bitmap, state.zoom
+    bg, draw, fallbackPreviewCanvas, state.overlay?.bitmap, state.zoom, state.position
   );
 }
 
@@ -461,6 +464,12 @@ els.brightnessSlider.addEventListener('input', () => {
 els.zoomSlider.addEventListener('input', () => {
   state.zoom = Number(els.zoomSlider.value);
   els.zoomVal.textContent = state.zoom;
+  els.positionSlider.disabled = state.zoom === 0;
+});
+
+els.positionSlider.addEventListener('input', () => {
+  state.position = Number(els.positionSlider.value);
+  els.positionVal.textContent = state.position;
 });
 
 els.colorPicker.addEventListener('input', () => {
@@ -682,6 +691,7 @@ async function doExport() {
       blurAmount: state.blurAmount,
       bgBrightness: state.bgBrightness,
       zoom: state.zoom,
+      position: state.position,
       bgColor: state.bgColor,
       quality: els.qualitySelect.value,
       overlay: state.overlay?.bitmap ?? null,

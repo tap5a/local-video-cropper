@@ -90,6 +90,9 @@
           <label class="ctl-label">Center zoom <span id="zoom-val">0</span></label>
           <input type="range" id="zoom-slider" min="0" max="100" value="0" />
           <p class="ctl-hint">Scales the video up so it crops in from the sides. 100 fills the frame completely.</p>
+          <label class="ctl-label">Position <span id="position-val">0</span></label>
+          <input type="range" id="position-slider" min="-1" max="1" step="0.01" value="0" disabled />
+          <p class="ctl-hint">With zoom above 0, slides the video to pick the visible part (−1 left/top, 1 right/bottom).</p>
         </div>
 
         <div class="ctl-group" id="blur-group" hidden>

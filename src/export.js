@@ -34,13 +34,19 @@ const supportsCanvasFilter = (() => {
 
 // Geometry for fit modes: background covers the output box, foreground fits
 // inside it, scaled up by `zoom` (0–100) from "contain" toward "cover" so it
-// crops in from the sides. Background is overscanned slightly so blur doesn't
-// reveal dark edges.
-export function fitLayout(srcW, srcH, outW, outH, zoom = 0) {
+// crops in from the sides. `position` (-1…1) slides the zoomed foreground
+// along the overflowing axis: -1 pins the left/top edge, 1 the right/bottom.
+// Background is overscanned slightly so blur doesn't reveal dark edges.
+export function fitLayout(srcW, srcH, outW, outH, zoom = 0, position = 0) {
   const cover = Math.max(outW / srcW, outH / srcH);
   const fit = Math.min(outW / srcW, outH / srcH);
   const bgScale = cover * 1.1;
   const fgScale = fit + (cover - fit) * (Math.min(100, Math.max(0, zoom)) / 100);
+  const fgW = srcW * fgScale;
+  const fgH = srcH * fgScale;
+  const p = Math.min(1, Math.max(-1, position));
+  const overX = Math.max(0, (fgW - outW) / 2);
+  const overY = Math.max(0, (fgH - outH) / 2);
   return {
     bg: {
       dx: (outW - srcW * bgScale) / 2,
@@ -49,10 +55,10 @@ export function fitLayout(srcW, srcH, outW, outH, zoom = 0) {
       dh: srcH * bgScale,
     },
     fg: {
-      dx: (outW - srcW * fgScale) / 2,
-      dy: (outH - srcH * fgScale) / 2,
-      dw: srcW * fgScale,
-      dh: srcH * fgScale,
+      dx: (outW - fgW) / 2 - p * overX,
+      dy: (outH - fgH) / 2 - p * overY,
+      dw: fgW,
+      dh: fgH,
     },
   };
 }
@@ -69,8 +75,8 @@ export function drawOverlayContain(ctx, bitmap, outW, outH) {
  * bg: { type: 'blur', blurPx, brightness (0-100) } | { type: 'color', color }
  * drawFrame(dx, dy, dw, dh, targetCtx?) draws the current video frame.
  */
-export function drawComposite(ctx, outW, outH, srcW, srcH, bg, drawFrame, fallbackCanvas, overlayBitmap, zoom = 0) {
-  const layout = fitLayout(srcW, srcH, outW, outH, zoom);
+export function drawComposite(ctx, outW, outH, srcW, srcH, bg, drawFrame, fallbackCanvas, overlayBitmap, zoom = 0, position = 0) {
+  const layout = fitLayout(srcW, srcH, outW, outH, zoom, position);
   ctx.clearRect(0, 0, outW, outH);
 
   if (bg.type === 'color') {
@@ -144,7 +150,7 @@ export function exportVideo(opts, onProgress) {
   const promise = (async () => {
     const {
       file, mode, crop, srcW, srcH, aspect, trimStart, trimEnd, duration,
-      blurAmount, bgBrightness, zoom, bgColor, quality, overlay,
+      blurAmount, bgBrightness, zoom, position, bgColor, quality, overlay,
     } = opts;
 
     const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -199,7 +205,7 @@ export function exportVideo(opts, onProgress) {
           drawComposite(
             ctx, outW, outH,
             sample.displayWidth, sample.displayHeight,
-            bg, draw, fallbackCanvas, overlay, zoom
+            bg, draw, fallbackCanvas, overlay, zoom, position
           );
           return canvas;
         },
