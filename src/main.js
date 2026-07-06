@@ -2,7 +2,6 @@ import {
   exportVideo, fitLayout, drawComposite, fitOutputDims,
   Input, BlobSource, ALL_FORMATS,
 } from './export.js';
-import { listRecents, saveRecent, deleteRecent } from './db.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -54,9 +53,9 @@ const els = {
   resultInfo: $('result-info'),
   errorBox: $('error-box'),
   newFileBtn: $('new-file-btn'),
-  openBtn: $('open-btn'),
-  recentList: $('recent-list'),
-  recentEmpty: $('recent-empty'),
+  zoomGroup: $('zoom-group'),
+  zoomSlider: $('zoom-slider'),
+  zoomVal: $('zoom-val'),
 };
 
 const ASPECTS = [
@@ -86,6 +85,7 @@ const state = {
   trimStart: 0,
   trimEnd: 0,
   blurAmount: 40,
+  zoom: 0,
   bgColor: '#000000',
   overlay: null, // { bitmap, name, url }
   exporting: false,
@@ -118,7 +118,7 @@ function showError(msg) {
 
 // ------------------------------------------------------------- file loading
 
-async function loadFile(file, handle = null) {
+async function loadFile(file) {
   if (!file || !file.type.startsWith('video/') && !/\.(mp4|mov|webm|mkv|m4v)$/i.test(file.name)) {
     showError('That does not look like a video file.');
     return;
@@ -178,131 +178,9 @@ async function loadFile(file, handle = null) {
   setAspect(state.aspect === 'free' && isFitMode() ? 'original' : state.aspect);
   layoutStage();
   updateTrimUI();
-
-  rememberFile(file, handle);
 }
 
-// ------------------------------------------------------------ recent files
-
-async function captureThumb() {
-  try {
-    const v = els.video;
-    if (v.readyState < 2) {
-      await new Promise((r) => {
-        v.addEventListener('loadeddata', r, { once: true });
-        setTimeout(r, 800);
-      });
-    }
-    const w = 96;
-    const h = Math.max(2, Math.round((w * state.srcH) / state.srcW));
-    const c = document.createElement('canvas');
-    c.width = w;
-    c.height = h;
-    c.getContext('2d').drawImage(v, 0, 0, w, h);
-    return c.toDataURL('image/jpeg', 0.6);
-  } catch {
-    return null;
-  }
-}
-
-async function rememberFile(file, handle) {
-  const thumb = await captureThumb();
-  await saveRecent({
-    id: `${file.name}|${file.size}`,
-    name: file.name,
-    size: file.size,
-    srcW: state.srcW,
-    srcH: state.srcH,
-    duration: state.duration,
-    thumb,
-    handle,
-    lastOpened: Date.now(),
-  });
-  renderRecents();
-}
-
-async function renderRecents() {
-  const items = await listRecents();
-  els.recentList.innerHTML = '';
-  els.recentEmpty.hidden = items.length > 0;
-  for (const it of items) {
-    const row = document.createElement('button');
-    row.className = 'recent-item';
-    row.title = it.name;
-
-    const img = document.createElement('img');
-    img.className = 'ri-thumb';
-    img.alt = '';
-    if (it.thumb) img.src = it.thumb;
-
-    const info = document.createElement('span');
-    info.className = 'ri-info';
-    const name = document.createElement('span');
-    name.className = 'ri-name';
-    name.textContent = it.name;
-    const meta = document.createElement('span');
-    meta.className = 'ri-meta';
-    meta.textContent = `${it.srcW}×${it.srcH} · ${fmtTime(it.duration)} · ${fmtSize(it.size)}`;
-    info.append(name, meta);
-
-    const x = document.createElement('span');
-    x.className = 'ri-x';
-    x.textContent = '✕';
-    x.title = 'Remove from recents';
-    x.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      await deleteRecent(it.id);
-      renderRecents();
-    });
-
-    row.append(img, info, x);
-    row.addEventListener('click', () => openRecent(it));
-    els.recentList.appendChild(row);
-  }
-}
-
-async function openRecent(it) {
-  if (it.handle) {
-    try {
-      let perm = await it.handle.queryPermission({ mode: 'read' });
-      if (perm !== 'granted') perm = await it.handle.requestPermission({ mode: 'read' });
-      if (perm === 'granted') {
-        const file = await it.handle.getFile();
-        await loadFile(file, it.handle);
-        return;
-      }
-    } catch {
-      showError(`Could not reopen "${it.name}" — the file may have been moved or renamed.`);
-      return;
-    }
-  }
-  // no stored handle (browser limitation) — fall back to the picker
-  pickFile();
-}
-
-// ------------------------------------------------------------ file picking
-
-const PICKER_TYPES = [{
-  description: 'Videos',
-  accept: { 'video/*': ['.mp4', '.mov', '.webm', '.mkv', '.m4v'] },
-}];
-
-async function pickFile() {
-  if (window.showOpenFilePicker) {
-    try {
-      const [handle] = await window.showOpenFilePicker({ types: PICKER_TYPES });
-      const file = await handle.getFile();
-      await loadFile(file, handle);
-    } catch (err) {
-      if (err?.name !== 'AbortError') showError(err.message);
-    }
-  } else {
-    els.fileInput.click();
-  }
-}
-
-els.dropZone.addEventListener('click', pickFile);
-els.openBtn.addEventListener('click', pickFile);
+els.dropZone.addEventListener('click', () => els.fileInput.click());
 els.fileInput.addEventListener('change', () => loadFile(els.fileInput.files[0]));
 
 for (const [evt, cls] of [['dragover', true], ['dragleave', false], ['drop', false]]) {
@@ -311,13 +189,9 @@ for (const [evt, cls] of [['dragover', true], ['dragleave', false], ['drop', fal
     els.dropZone.classList.toggle('dragover', cls);
   });
 }
-els.dropZone.addEventListener('drop', async (e) => {
+els.dropZone.addEventListener('drop', (e) => {
   const file = e.dataTransfer.files[0];
-  if (!file) return;
-  // must be requested synchronously inside the drop event
-  const handlePromise = e.dataTransfer.items?.[0]?.getAsFileSystemHandle?.() ?? null;
-  const handle = await Promise.resolve(handlePromise).catch(() => null);
-  loadFile(file, handle?.kind === 'file' ? handle : null);
+  if (file) loadFile(file);
 });
 
 els.newFileBtn.addEventListener('click', () => {
@@ -524,6 +398,7 @@ function setMode(mode) {
   const fit = mode !== 'crop';
   els.stage.classList.toggle('blur-mode', fit);
   els.blurPreview.hidden = !fit;
+  els.zoomGroup.hidden = !fit;
   els.blurGroup.hidden = mode !== 'blur';
   els.colorGroup.hidden = mode !== 'color';
   els.modeHint.textContent = MODE_HINTS[mode];
@@ -558,13 +433,18 @@ function drawPreviewFrame() {
     (targetCtx || previewCtx).drawImage(els.video, dx, dy, dw, dh);
   drawComposite(
     previewCtx, cw, ch, state.srcW, state.srcH,
-    bg, draw, fallbackPreviewCanvas, state.overlay?.bitmap
+    bg, draw, fallbackPreviewCanvas, state.overlay?.bitmap, state.zoom
   );
 }
 
 els.blurSlider.addEventListener('input', () => {
   state.blurAmount = Number(els.blurSlider.value);
   els.blurVal.textContent = state.blurAmount;
+});
+
+els.zoomSlider.addEventListener('input', () => {
+  state.zoom = Number(els.zoomSlider.value);
+  els.zoomVal.textContent = state.zoom;
 });
 
 els.colorPicker.addEventListener('input', () => {
@@ -784,6 +664,7 @@ async function doExport() {
       trimEnd: state.trimEnd,
       duration: state.duration,
       blurAmount: state.blurAmount,
+      zoom: state.zoom,
       bgColor: state.bgColor,
       quality: els.qualitySelect.value,
       overlay: state.overlay?.bitmap ?? null,
@@ -830,10 +711,9 @@ els.cancelBtn.addEventListener('click', () => currentExport?.cancel());
 
 renderAspectButtons();
 setMode('crop');
-renderRecents();
 
 // test hook for automated verification
 window.__app = {
-  state, loadFile, doExport, els, setMode, setAspect, renderRecents,
+  state, loadFile, doExport, els, setMode, setAspect,
   mb: { Input, BlobSource, ALL_FORMATS },
 };

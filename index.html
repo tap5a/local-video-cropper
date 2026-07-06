@@ -19,15 +19,6 @@
   </header>
 
   <main>
-    <!-- Recents sidebar -->
-    <aside id="sidebar">
-      <button id="open-btn" class="secondary">Open video…</button>
-      <div class="sb-label">Recent</div>
-      <div id="recent-list"></div>
-      <p id="recent-empty" class="ctl-hint">Videos you open appear here for one-click reopening. Stored only in this browser.</p>
-    </aside>
-
-    <div id="content">
     <!-- Drop zone (initial view) -->
     <section id="drop-zone">
       <div class="dz-inner">
@@ -95,6 +86,12 @@
           <div class="aspect-grid" id="aspect-grid"></div>
         </div>
 
+        <div class="ctl-group" id="zoom-group" hidden>
+          <label class="ctl-label">Center zoom <span id="zoom-val">0</span></label>
+          <input type="range" id="zoom-slider" min="0" max="100" value="0" />
+          <p class="ctl-hint">Scales the video up so it crops in from the sides. 100 fills the frame completely.</p>
+        </div>
+
         <div class="ctl-group" id="blur-group" hidden>
           <label class="ctl-label">Background blur <span id="blur-val">40</span></label>
           <input type="range" id="blur-slider" min="0" max="100" value="40" />
@@ -154,7 +151,6 @@
         <button id="new-file-btn" class="ghost">Open another video</button>
       </aside>
     </section>
-    </div>
   </main>
 
   <script type="module" src="/src/main.js"></script>

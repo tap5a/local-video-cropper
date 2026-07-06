@@ -18,8 +18,8 @@ runs at (or faster than) real time.
   background color of your choice.
 - **PNG overlays** — drop a transparent PNG on top of the video, scaled to
   fit the output frame, in any mode.
-- **Recent files** — reopened in one click via File System Access handles
-  stored in IndexedDB (browser-local storage; nothing is uploaded).
+- **Center zoom** — in fit modes, scale the video up (0–100) so it crops in
+  from the sides; 100 fills the frame completely.
 - **Export to MP4** — hardware-accelerated H.264 (falls back to HEVC/VP9/AV1
   depending on the browser), quality presets, audio preserved via stream
   copy, progress bar and cancel.
