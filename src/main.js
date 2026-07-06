@@ -1,7 +1,10 @@
+import { inject } from '@vercel/analytics';
 import {
   exportVideo, fitLayout, drawComposite, fitOutputDims,
   Input, BlobSource, ALL_FORMATS,
 } from './export.js';
+
+inject(); // Vercel Web Analytics — page views only, no video data ever leaves the browser
 
 const $ = (id) => document.getElementById(id);
 
