@@ -11,6 +11,7 @@ import {
   QUALITY_HIGH,
   QUALITY_VERY_HIGH,
 } from 'mediabunny';
+import { blurBackground, getBlurPathOverride } from './blur.js';
 
 export { Input, BlobSource, ALL_FORMATS };
 
@@ -63,6 +64,21 @@ export function fitLayout(srcW, srcH, outW, outH, zoom = 0, position = 0) {
   };
 }
 
+// rung 1 of the blur ladder: WebGL Gaussian. Returns true if it drew the
+// background; false → caller falls through to ctx.filter / downscale trick.
+function blurLadderWebgl(ctx, outW, outH, layout, blurPx, drawFrame) {
+  const blurred = blurBackground(
+    (sctx) => {
+      const { bg: b } = layout;
+      drawFrame(b.dx, b.dy, b.dw, b.dh, sctx);
+    },
+    outW, outH, blurPx
+  );
+  if (!blurred) return false;
+  ctx.drawImage(blurred, 0, 0, outW, outH);
+  return true;
+}
+
 export function drawOverlayContain(ctx, bitmap, outW, outH) {
   const fit = Math.min(outW / bitmap.width, outH / bitmap.height);
   const dw = bitmap.width * fit;
@@ -79,13 +95,18 @@ export function drawComposite(ctx, outW, outH, srcW, srcH, bg, drawFrame, fallba
   const layout = fitLayout(srcW, srcH, outW, outH, zoom, position);
   ctx.clearRect(0, 0, outW, outH);
 
+  const pathOverride = getBlurPathOverride();
+
   if (bg.type === 'color') {
     ctx.fillStyle = bg.color;
     ctx.fillRect(0, 0, outW, outH);
   } else if (bg.blurPx <= 0) {
     const { bg: b } = layout;
     drawFrame(b.dx, b.dy, b.dw, b.dh);
-  } else if (supportsCanvasFilter) {
+  } else if (blurLadderWebgl(ctx, outW, outH, layout, bg.blurPx, drawFrame)) {
+    // rung 1: WebGL two-pass Gaussian (all browsers) — drawn by the helper
+  } else if (supportsCanvasFilter && pathOverride !== 'scale') {
+    // rung 2: canvas 2D filter
     ctx.filter = `blur(${bg.blurPx}px)`;
     const { bg: b } = layout;
     drawFrame(b.dx, b.dy, b.dw, b.dh);

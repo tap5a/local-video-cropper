@@ -3,8 +3,13 @@ import {
   exportVideo, fitLayout, drawComposite, fitOutputDims,
   Input, BlobSource, ALL_FORMATS,
 } from './export.js';
+import { setBlurPathOverride, blurAvailable, getDebugGl } from './blur.js';
 
 inject(); // Vercel Web Analytics — page views only, no video data ever leaves the browser
+
+// test hook: force a blur path with ?blurpath=webgl|filter|scale
+const blurPathParam = new URLSearchParams(location.search).get('blurpath');
+if (blurPathParam) setBlurPathOverride(blurPathParam);
 
 const $ = (id) => document.getElementById(id);
 
@@ -659,13 +664,22 @@ function tick() {
 }
 
 // Drive the UI with rAF while the tab is visible; browsers suspend rAF in
-// hidden/background tabs, so fall back to a coarse interval there.
+// hidden/background tabs, so fall back to a coarse interval there. tick() is
+// guarded so a transient draw error (e.g. GPU context loss) can never kill
+// the loop permanently.
+function safeTick() {
+  try {
+    tick();
+  } catch (err) {
+    console.warn('preview tick failed:', err);
+  }
+}
 (function loop() {
-  tick();
+  safeTick();
   requestAnimationFrame(loop);
 })();
 setInterval(() => {
-  if (document.visibilityState === 'hidden') tick();
+  if (document.visibilityState === 'hidden') safeTick();
 }, 250);
 
 // ------------------------------------------------------------ output info
@@ -771,4 +785,5 @@ setMode('crop');
 window.__app = {
   state, loadFile, doExport, els, setMode, setAspect,
   mb: { Input, BlobSource, ALL_FORMATS },
+  blur: { setBlurPathOverride, blurAvailable, getDebugGl },
 };
