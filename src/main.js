@@ -618,31 +618,47 @@ els.playBtn.addEventListener('click', togglePlay);
 // snap to the 1/10th-second grid the timeline numbers use
 const snapTenth = (t) => Math.round(t * 10) / 10;
 
+// shared by keyboard shortcuts and the tappable hint buttons
+const editActions = {
+  in: () => { // set trim in point at the playhead
+    state.trimStart = clamp(snapTenth(els.video.currentTime), 0, state.trimEnd - MIN_TRIM_GAP);
+    updateTrimUI();
+  },
+  out: () => { // set trim out point at the playhead
+    state.trimEnd = clamp(snapTenth(els.video.currentTime), state.trimStart + MIN_TRIM_GAP, state.duration);
+    updateTrimUI();
+  },
+  back: () => { // step 0.1s back (not fenced, so in/out can be widened)
+    els.video.currentTime = clamp(snapTenth(els.video.currentTime - 0.1), 0, state.duration);
+  },
+  fwd: () => { // step 0.1s forward
+    els.video.currentTime = clamp(snapTenth(els.video.currentTime + 0.1), 0, state.duration);
+  },
+  play: togglePlay,
+};
+
+const KEY_ACTIONS = {
+  Space: 'play',
+  KeyI: 'in',
+  KeyO: 'out',
+  ArrowLeft: 'back',
+  ArrowRight: 'fwd',
+};
+
 document.addEventListener('keydown', (e) => {
   if (els.editor.hidden || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  const v = els.video;
-  switch (e.code) {
-    case 'Space':
-      e.preventDefault();
-      togglePlay();
-      break;
-    case 'KeyI': // set trim in point at the playhead
-      state.trimStart = clamp(snapTenth(v.currentTime), 0, state.trimEnd - MIN_TRIM_GAP);
-      updateTrimUI();
-      break;
-    case 'KeyO': // set trim out point at the playhead
-      state.trimEnd = clamp(snapTenth(v.currentTime), state.trimStart + MIN_TRIM_GAP, state.duration);
-      updateTrimUI();
-      break;
-    case 'ArrowLeft': // step 0.1s back (not fenced, so in/out can be widened)
-      e.preventDefault();
-      v.currentTime = clamp(snapTenth(v.currentTime - 0.1), 0, state.duration);
-      break;
-    case 'ArrowRight': // step 0.1s forward
-      e.preventDefault();
-      v.currentTime = clamp(snapTenth(v.currentTime + 0.1), 0, state.duration);
-      break;
-  }
+  const action = KEY_ACTIONS[e.code];
+  if (!action) return;
+  e.preventDefault();
+  editActions[action]();
+});
+
+// the hint key caps double as touch buttons (iPhone/iPad — no keyboard)
+$('kbd-hints').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  editActions[btn.dataset.action]?.();
+  btn.blur(); // so a later Space keypress doesn't re-trigger the focused button
 });
 
 els.video.addEventListener('play', () => { els.playBtn.textContent = '⏸'; });

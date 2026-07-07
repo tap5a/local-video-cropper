@@ -225,15 +225,21 @@ main { flex: 1; display: flex; padding: 14px; min-height: 0; }
   color: var(--text-dim);
   text-align: center;
 }
-#kbd-hints kbd {
+#kbd-hints .kbd {
   font-family: inherit;
   font-size: 10px;
+  color: var(--text);
   background: var(--panel-2);
   border: 1px solid var(--border-strong);
   border-radius: 4px;
-  padding: 1px 5px;
+  padding: 2px 7px;
   margin: 0 1px;
+  cursor: pointer;
+  touch-action: manipulation; /* no 300ms double-tap delay on touch */
+  transition: background 0.1s, border-color 0.1s, transform 0.05s;
 }
+#kbd-hints .kbd:hover { border-color: var(--accent); }
+#kbd-hints .kbd:active { background: var(--panel-3); transform: translateY(1px); }
 
 /* ---- Controls sidebar ---- */
 #controls {
