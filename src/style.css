@@ -219,6 +219,22 @@ main { flex: 1; display: flex; padding: 14px; min-height: 0; }
 #tl-times b { color: var(--text); font-weight: 500; }
 #time-current { color: var(--text); }
 
+#kbd-hints {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+  text-align: center;
+}
+#kbd-hints kbd {
+  font-family: inherit;
+  font-size: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin: 0 1px;
+}
+
 /* ---- Controls sidebar ---- */
 #controls {
   width: 280px;

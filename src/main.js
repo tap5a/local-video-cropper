@@ -574,12 +574,13 @@ function bindTrimHandle(el, which) {
 bindTrimHandle(els.tlHandleStart, 'start');
 bindTrimHandle(els.tlHandleEnd, 'end');
 
-// click-to-seek + drag-to-scrub on the timeline track
+// click-to-seek + drag-to-scrub on the timeline track; scrubbing is fenced
+// to the trim range so the in/out points act as hard edges
 els.tlTrack.addEventListener('pointerdown', (e) => {
   e.preventDefault();
   try { els.tlTrack.setPointerCapture(e.pointerId); } catch {}
   const scrub = (ev) => {
-    els.video.currentTime = trackTime(ev.clientX);
+    els.video.currentTime = clamp(trackTime(ev.clientX), state.trimStart, state.trimEnd);
   };
   scrub(e);
   const move = (ev) => scrub(ev);
@@ -608,10 +609,34 @@ function togglePlay() {
 }
 
 els.playBtn.addEventListener('click', togglePlay);
+
+// snap to the 1/10th-second grid the timeline numbers use
+const snapTenth = (t) => Math.round(t * 10) / 10;
+
 document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && !els.editor.hidden && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
-    e.preventDefault();
-    togglePlay();
+  if (els.editor.hidden || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  const v = els.video;
+  switch (e.code) {
+    case 'Space':
+      e.preventDefault();
+      togglePlay();
+      break;
+    case 'KeyI': // set trim in point at the playhead
+      state.trimStart = clamp(snapTenth(v.currentTime), 0, state.trimEnd - MIN_TRIM_GAP);
+      updateTrimUI();
+      break;
+    case 'KeyO': // set trim out point at the playhead
+      state.trimEnd = clamp(snapTenth(v.currentTime), state.trimStart + MIN_TRIM_GAP, state.duration);
+      updateTrimUI();
+      break;
+    case 'ArrowLeft': // step 0.1s back (not fenced, so in/out can be widened)
+      e.preventDefault();
+      v.currentTime = clamp(snapTenth(v.currentTime - 0.1), 0, state.duration);
+      break;
+    case 'ArrowRight': // step 0.1s forward
+      e.preventDefault();
+      v.currentTime = clamp(snapTenth(v.currentTime + 0.1), 0, state.duration);
+      break;
   }
 });
 
