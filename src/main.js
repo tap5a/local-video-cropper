@@ -661,8 +661,14 @@ $('kbd-hints').addEventListener('click', (e) => {
   btn.blur(); // so a later Space keypress doesn't re-trigger the focused button
 });
 
-els.video.addEventListener('play', () => { els.playBtn.textContent = '⏸'; });
-els.video.addEventListener('pause', () => { els.playBtn.textContent = '▶'; });
+// SVG icons instead of ▶/⏸ glyphs — iOS renders those codepoints as emoji.
+// toggleAttribute, not the .hidden property: SVG elements lack the IDL property.
+function setPlayIcon(playing) {
+  $('icon-play').toggleAttribute('hidden', playing);
+  $('icon-pause').toggleAttribute('hidden', !playing);
+}
+els.video.addEventListener('play', () => setPlayIcon(true));
+els.video.addEventListener('pause', () => setPlayIcon(false));
 
 function tick() {
   if (els.editor.hidden || !state.duration) return;

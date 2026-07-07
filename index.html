@@ -55,7 +55,15 @@
 
         <!-- Timeline / trim -->
         <div id="timeline">
-          <button id="play-btn" title="Play / pause (Space)">▶</button>
+          <button id="play-btn" title="Play / pause (Space)">
+            <svg id="icon-play" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M7 4.5v15c0 .8.9 1.3 1.6.9l12-7.5c.6-.4.6-1.4 0-1.8l-12-7.5C7.9 3.2 7 3.7 7 4.5z" />
+            </svg>
+            <svg id="icon-pause" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden>
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          </button>
           <div id="tl-track">
             <div id="tl-range"></div>
             <div id="tl-playhead"></div>

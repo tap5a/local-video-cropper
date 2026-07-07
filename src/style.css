@@ -163,9 +163,11 @@ main { flex: 1; display: flex; padding: 14px; min-height: 0; }
   border: 1px solid var(--border-strong);
   background: var(--panel-2);
   color: var(--text);
-  font-size: 11px;
   cursor: pointer;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.1s, border-color 0.1s;
 }
 #play-btn:hover { background: var(--panel-3); border-color: #3a3b42; }
