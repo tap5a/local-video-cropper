@@ -1,6 +1,6 @@
 # Local Video Cropper
 
-Live: <https://local-video-cropper.vercel.app> · Source: <https://github.com/tap5a/local-video-cropper>
+Live: <https://local-video-cropper.tap5a.io> · Source: <https://github.com/tap5a/local-video-cropper>
 
 Crop, reframe and trim videos entirely in your browser — no upload, no server,
 nothing leaves your device. Built on [Mediabunny](https://mediabunny.dev/) and
