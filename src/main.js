@@ -62,6 +62,7 @@ const els = {
   downloadLink: $('download-link'),
   resultInfo: $('result-info'),
   errorBox: $('error-box'),
+  dzError: $('dz-error'),
   newFileBtn: $('new-file-btn'),
   zoomGroup: $('zoom-group'),
   zoomSlider: $('zoom-slider'),
@@ -126,8 +127,12 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const even = (n) => Math.max(2, 2 * Math.round(n / 2));
 
 function showError(msg) {
-  els.errorBox.textContent = msg;
-  els.errorBox.hidden = !msg;
+  // #error-box lives in the editor sidebar and #dz-error in the drop zone;
+  // only one view is visible at a time, so update both.
+  for (const box of [els.errorBox, els.dzError]) {
+    box.textContent = msg;
+    box.hidden = !msg;
+  }
 }
 
 // ------------------------------------------------------------- file loading
@@ -146,14 +151,28 @@ async function loadFile(file) {
   const url = URL.createObjectURL(file);
   const video = els.video;
   video.src = url;
+  // iOS Safari can stall indefinitely on blob URLs backed by the Photos
+  // picker's temp file without an explicit load() kick.
+  video.load();
 
-  await new Promise((resolve, reject) => {
-    video.onloadedmetadata = resolve;
-    video.onerror = () => reject(new Error('Could not read this video in the browser.'));
-  }).catch((err) => {
+  try {
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error('Reading this video timed out. Try picking it again — on iPhone/iPad the Files app is more reliable than the Photo Library.')),
+        10000,
+      );
+      video.onloadedmetadata = () => { clearTimeout(timer); resolve(); };
+      video.onerror = () => {
+        clearTimeout(timer);
+        reject(new Error('Could not read this video in the browser. Try picking it again — on iPhone/iPad the Files app is more reliable than the Photo Library.'));
+      };
+    });
+  } catch (err) {
+    URL.revokeObjectURL(url);
+    video.removeAttribute('src');
     showError(err.message);
-    throw err;
-  });
+    return;
+  }
 
   state.srcW = video.videoWidth;
   state.srcH = video.videoHeight;
@@ -168,9 +187,11 @@ async function loadFile(file) {
   if (!Number.isFinite(duration) || mbDuration > duration) duration = mbDuration;
 
   // Nudge the element past a bogus reported end so preview seeking works.
+  // Timeboxed: iOS Safari sometimes never fires seeked before playback starts.
   if (!Number.isFinite(video.duration) || video.duration < duration) {
     await new Promise((resolve) => {
       video.onseeked = resolve;
+      setTimeout(resolve, 3000);
       video.currentTime = duration;
     });
     video.onseeked = null;
@@ -199,7 +220,13 @@ async function loadFile(file) {
 }
 
 els.dropZone.addEventListener('click', () => els.fileInput.click());
-els.fileInput.addEventListener('change', () => loadFile(els.fileInput.files[0]));
+els.fileInput.addEventListener('change', () => {
+  const file = els.fileInput.files[0];
+  // Clear immediately so picking the same file after a failure fires
+  // change again (Safari won't re-fire it for an unchanged value).
+  els.fileInput.value = '';
+  loadFile(file);
+});
 
 for (const [evt, cls] of [['dragover', true], ['dragleave', false], ['drop', false]]) {
   els.dropZone.addEventListener(evt, (e) => {
