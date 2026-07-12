@@ -16,6 +16,7 @@
     </div>
     <h1>Local Video Cropper</h1>
     <p>Crop, reframe &amp; trim — nothing leaves your browser</p>
+    <button id="help-btn" aria-label="Help" title="Help">?</button>
   </header>
 
   <main>
@@ -172,6 +173,29 @@
       </aside>
     </section>
   </main>
+
+  <dialog id="help-dialog">
+    <div class="help-head">
+      <h2>About this tool</h2>
+      <button id="help-close" aria-label="Close">✕</button>
+    </div>
+    <section>
+      <h3>What it does</h3>
+      <p>Crop a region of a video, reframe it to a new aspect ratio (16:9, 9:16, 1:1 and more) with a blurred or colored background, trim the length, add a PNG overlay — and export the result as an MP4.</p>
+    </section>
+    <section>
+      <h3>Why use it</h3>
+      <p>Everything happens locally in your browser. Your video is never uploaded anywhere, so it's completely private and works without an account, install, or watermark — and it's free.</p>
+    </section>
+    <section>
+      <h3>Requirements</h3>
+      <p>A recent version of a modern browser — Chrome, Edge, Safari, or Firefox. The tool relies on new built-in video processing APIs (WebCodecs), so older browsers won't work.</p>
+    </section>
+    <section>
+      <h3>Made by</h3>
+      <p>Tapio Haaja (Tap5a) — <a href="https://tap5a.io/" target="_blank" rel="noopener">tap5a.io</a></p>
+    </section>
+  </dialog>
 
   <script type="module" src="/src/main.js"></script>
 </body>

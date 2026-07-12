@@ -637,6 +637,15 @@ const editActions = {
   play: togglePlay,
 };
 
+// ------------------------------------------------------------- help dialog
+
+const helpDialog = $('help-dialog');
+$('help-btn').addEventListener('click', () => helpDialog.showModal());
+$('help-close').addEventListener('click', () => helpDialog.close());
+helpDialog.addEventListener('click', (e) => {
+  if (e.target === helpDialog) helpDialog.close(); // backdrop click
+});
+
 const KEY_ACTIONS = {
   Space: 'play',
   KeyI: 'in',
@@ -646,7 +655,7 @@ const KEY_ACTIONS = {
 };
 
 document.addEventListener('keydown', (e) => {
-  if (els.editor.hidden || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (els.editor.hidden || helpDialog.open || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   const action = KEY_ACTIONS[e.code];
   if (!action) return;
   e.preventDefault();
