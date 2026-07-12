@@ -60,6 +60,7 @@ const els = {
   result: $('result'),
   resultVideo: $('result-video'),
   downloadLink: $('download-link'),
+  shareBtn: $('share-btn'),
   resultInfo: $('result-info'),
   errorBox: $('error-box'),
   dzError: $('dz-error'),
@@ -105,6 +106,7 @@ const state = {
   overlay: null, // { bitmap, name, url }
   exporting: false,
   resultUrl: null,
+  resultFile: null,
 };
 
 const isFitMode = () => state.mode !== 'crop';
@@ -250,7 +252,9 @@ els.newFileBtn.addEventListener('click', () => {
 function clearResult() {
   if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
   state.resultUrl = null;
+  state.resultFile = null;
   els.result.hidden = true;
+  els.shareBtn.hidden = true;
   els.resultVideo.removeAttribute('src');
 }
 
@@ -812,7 +816,11 @@ async function doExport() {
     const aspectLabel = ASPECTS.find((a) => a.value === state.aspect)?.label
       .replace(':', 'x') ?? 'custom';
     const modeSuffix = state.mode === 'crop' ? '' : `-${state.mode}`;
-    els.downloadLink.download = `${state.fileName}-${aspectLabel}${modeSuffix}.mp4`;
+    const outName = `${state.fileName}-${aspectLabel}${modeSuffix}.mp4`;
+    els.downloadLink.download = outName;
+
+    state.resultFile = new File([blob], outName, { type: 'video/mp4' });
+    els.shareBtn.hidden = !navigator.canShare?.({ files: [state.resultFile] });
 
     els.resultInfo.textContent = `${outW}×${outH} · ${codec.toUpperCase()} · ${fmtSize(blob.size)}`;
     els.result.hidden = false;
@@ -833,6 +841,16 @@ async function doExport() {
 
 els.exportBtn.addEventListener('click', doExport);
 els.cancelBtn.addEventListener('click', () => currentExport?.cancel());
+
+els.shareBtn.addEventListener('click', async () => {
+  if (!state.resultFile) return;
+  try {
+    await navigator.share({ files: [state.resultFile] });
+  } catch (err) {
+    // Cancelling the share sheet rejects with AbortError — not an error.
+    if (err.name !== 'AbortError') showError(`Share failed: ${err.message}`);
+  }
+});
 
 // ------------------------------------------------------------------- init
 
