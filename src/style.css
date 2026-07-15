@@ -122,6 +122,18 @@ main { flex: 1; display: flex; padding: 14px; min-height: 0; }
 }
 .dz-inner { text-align: center; color: var(--text-dim); }
 .dz-icon { margin-bottom: 14px; color: var(--text-dim); }
+/* Periodic "drop it here" nudge: idle most of the cycle, then a quick dip and back */
+.dz-icon svg { animation: dz-nudge 5s ease-in-out infinite; }
+@keyframes dz-nudge {
+  0%, 70%, 100% { transform: translateY(0); }
+  76% { transform: translateY(6px); }
+  82% { transform: translateY(0); }
+  88% { transform: translateY(5px); }
+  94% { transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dz-icon svg { animation: none; }
+}
 .dz-inner strong { color: var(--text); font-weight: 500; }
 .dz-hint { font-size: 12px; margin-top: 6px; }
 
