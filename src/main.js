@@ -116,7 +116,7 @@ const isFitMode = () => state.mode !== 'crop';
 const fmtTime = (t) => {
   const m = Math.floor(t / 60);
   const s = t - m * 60;
-  return `${m}:${s.toFixed(1).padStart(4, '0')}`;
+  return `${m}:${s.toFixed(2).padStart(5, '0')}`;
 };
 
 const fmtSize = (bytes) => {
@@ -646,25 +646,28 @@ function togglePlay() {
 
 els.playBtn.addEventListener('click', togglePlay);
 
-// snap to the 1/10th-second grid the timeline numbers use
-const snapTenth = (t) => Math.round(t * 10) / 10;
+// snap to the 1/100th-second grid the timeline numbers use
+const snapHundredth = (t) => Math.round(t * 100) / 100;
+
+// step the playhead (not fenced to the trim range, so in/out can be widened)
+const stepBy = (delta) => {
+  els.video.currentTime = clamp(snapHundredth(els.video.currentTime + delta), 0, state.duration);
+};
 
 // shared by keyboard shortcuts and the tappable hint buttons
 const editActions = {
   in: () => { // set trim in point at the playhead
-    state.trimStart = clamp(snapTenth(els.video.currentTime), 0, state.trimEnd - MIN_TRIM_GAP);
+    state.trimStart = clamp(snapHundredth(els.video.currentTime), 0, state.trimEnd - MIN_TRIM_GAP);
     updateTrimUI();
   },
   out: () => { // set trim out point at the playhead
-    state.trimEnd = clamp(snapTenth(els.video.currentTime), state.trimStart + MIN_TRIM_GAP, state.duration);
+    state.trimEnd = clamp(snapHundredth(els.video.currentTime), state.trimStart + MIN_TRIM_GAP, state.duration);
     updateTrimUI();
   },
-  back: () => { // step 0.1s back (not fenced, so in/out can be widened)
-    els.video.currentTime = clamp(snapTenth(els.video.currentTime - 0.1), 0, state.duration);
-  },
-  fwd: () => { // step 0.1s forward
-    els.video.currentTime = clamp(snapTenth(els.video.currentTime + 0.1), 0, state.duration);
-  },
+  back: () => stepBy(-0.01),
+  fwd: () => stepBy(0.01),
+  backCoarse: () => stepBy(-0.1), // Shift+←, power-user shortcut, not shown in the UI
+  fwdCoarse: () => stepBy(0.1), // Shift+→, power-user shortcut, not shown in the UI
   play: togglePlay,
 };
 
@@ -687,9 +690,10 @@ const KEY_ACTIONS = {
 
 document.addEventListener('keydown', (e) => {
   if (els.editor.hidden || helpDialog.open || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  const action = KEY_ACTIONS[e.code];
+  let action = KEY_ACTIONS[e.code];
   if (!action) return;
   e.preventDefault();
+  if (e.shiftKey && (action === 'back' || action === 'fwd')) action += 'Coarse';
   editActions[action]();
 });
 
