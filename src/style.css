@@ -495,7 +495,7 @@ button.ghost:hover { color: var(--text); }
    items of #controls, exactly as before the wrapper existed. */
 #ctl-tabs { display: none; }
 #panel-grip { display: none; }
-.kbd-long { display: none; } /* "In"/"Out" long labels: mobile only; desktop shows the I/O key caps */
+.mobile-only { display: none; } /* text shown only in the compact layout (e.g. "In"/"Out" vs I/O key caps) */
 #ctl-sheet { display: contents; }
 #ctl-panels { display: contents; }
 .result-head { display: none; }
@@ -543,10 +543,10 @@ button.ghost:hover { color: var(--text); }
     background: transparent;
     border: none;
     padding: 0;
-    gap: 8px;
+    gap: 11px;
     overflow: visible;
   }
-  .kbd-long { display: inline; }
+  .mobile-only { display: inline; }
   #ctl-sheet {
     display: flex;
     flex-direction: column;
