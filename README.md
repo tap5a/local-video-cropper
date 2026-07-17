@@ -1,4 +1,4 @@
-# Local Video Cropper
+# Tap5a Local Video Cropper
 
 Live: <https://local-video-cropper.tap5a.io> · Source: <https://github.com/tap5a/local-video-cropper>
 
@@ -42,3 +42,7 @@ headers needed; SharedArrayBuffer/COOP/COEP are not required).
 Requires WebCodecs: Chrome/Edge 94+, Firefox 130+ (desktop), Safari 26+.
 Audio is copied without re-encoding whenever possible, so trimming keeps the
 original audio quality.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
