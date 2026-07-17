@@ -32,6 +32,11 @@
         <p><strong>Drop a video here</strong> or click to choose a file</p>
         <p class="dz-hint">Processed entirely on your device</p>
         <div id="dz-error" hidden></div>
+        <div id="unsupported-warning" hidden>
+          <strong>This browser can't run the tool.</strong><br />
+          It lacks WebCodecs, the built-in video processing API used to decode and encode video.
+          Please use Chrome&nbsp;94+, Edge&nbsp;94+, Safari&nbsp;26+ or Firefox&nbsp;130+ (desktop).
+        </div>
       </div>
       <input type="file" id="file-input" accept="video/*,.mkv" hidden />
     </section>

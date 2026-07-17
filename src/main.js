@@ -66,6 +66,7 @@ const els = {
   resultInfo: $('result-info'),
   errorBox: $('error-box'),
   dzError: $('dz-error'),
+  unsupportedWarning: $('unsupported-warning'),
   newFileBtn: $('new-file-btn'),
   logoBtn: $('logo-btn'),
   ctlTabs: $('ctl-tabs'),
@@ -75,6 +76,17 @@ const els = {
   positionSlider: $('position-slider'),
   positionVal: $('position-val'),
 };
+
+// WebCodecs is a hard requirement: without it the app can neither decode nor
+// encode video, so warn on the start screen instead of failing at export time.
+// test hook: simulate a browser without WebCodecs with ?nowebcodecs
+const webCodecsSupported =
+  typeof VideoDecoder !== 'undefined' && typeof VideoEncoder !== 'undefined' &&
+  !new URLSearchParams(location.search).has('nowebcodecs');
+if (!webCodecsSupported) {
+  els.unsupportedWarning.hidden = false;
+  els.dropZone.classList.add('unsupported');
+}
 
 const ASPECTS = [
   { label: 'Original', value: 'original' },
@@ -225,7 +237,9 @@ async function loadFile(file) {
   setTimeout(layoutStage, 120);
 }
 
-els.dropZone.addEventListener('click', () => els.fileInput.click());
+els.dropZone.addEventListener('click', () => {
+  if (webCodecsSupported) els.fileInput.click();
+});
 els.fileInput.addEventListener('change', () => {
   const file = els.fileInput.files[0];
   // Clear immediately so picking the same file after a failure fires
@@ -241,6 +255,7 @@ for (const [evt, cls] of [['dragover', true], ['dragleave', false], ['drop', fal
   });
 }
 els.dropZone.addEventListener('drop', (e) => {
+  if (!webCodecsSupported) return;
   const file = e.dataTransfer.files[0];
   if (file) loadFile(file);
 });

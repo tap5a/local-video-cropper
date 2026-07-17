@@ -137,6 +137,19 @@ main { flex: 1; display: flex; padding: 14px; min-height: 0; }
 .dz-inner strong { color: var(--text); font-weight: 500; }
 .dz-hint { font-size: 12px; margin-top: 6px; }
 
+/* Browser lacks WebCodecs: keep the drop zone visible but inert */
+#drop-zone.unsupported { cursor: default; }
+#drop-zone.unsupported:hover, #drop-zone.unsupported.dragover {
+  border-color: var(--border-strong);
+  background: var(--panel);
+}
+#unsupported-warning {
+  margin: 14px auto 0;
+  max-width: 400px;
+  text-align: left;
+}
+#unsupported-warning strong { color: inherit; font-weight: 600; }
+
 /* ---- Editor layout ---- */
 #editor { flex: 1; display: flex; gap: 14px; min-height: 0; min-width: 0; }
 .stage-col { flex: 1; display: flex; flex-direction: column; min-width: 0; }
@@ -477,7 +490,7 @@ button.ghost:hover { color: var(--text); }
 #result video { width: 100%; border: 1px solid var(--border); border-radius: 7px; background: #000; }
 #result-info { font-size: 11.5px; color: var(--text-dim); text-align: center; font-variant-numeric: tabular-nums; }
 
-#error-box, #dz-error {
+#error-box, #dz-error, #unsupported-warning {
   background: rgba(235, 87, 87, 0.08);
   border: 1px solid rgba(235, 87, 87, 0.4);
   color: #f0a3a3;
