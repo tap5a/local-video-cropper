@@ -457,6 +457,38 @@ els.ctlTabs.addEventListener('click', (e) => {
   if (btn && !btn.disabled) setCtlTab(btn.dataset.tabBtn);
 });
 
+// Drag the grip above the controls to trade space between the panel area
+// and the video (portrait mobile only; the grip is display:none elsewhere).
+// The height lives in --panel-h so the landscape/desktop rules are unaffected.
+const panelGrip = $('panel-grip');
+const ctlPanels = $('ctl-panels');
+const PANEL_H_KEY = 'vc-panel-h';
+const clampPanelH = (h) => clamp(h, 0, Math.min(window.innerHeight * 0.5, 340));
+
+const savedPanelH = Number(localStorage.getItem(PANEL_H_KEY));
+if (savedPanelH > 0) {
+  ctlPanels.style.setProperty('--panel-h', `${clampPanelH(savedPanelH)}px`);
+}
+
+let gripCtx = null;
+panelGrip.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  try { panelGrip.setPointerCapture(e.pointerId); } catch {}
+  gripCtx = { startY: e.clientY, startH: ctlPanels.getBoundingClientRect().height };
+});
+panelGrip.addEventListener('pointermove', (e) => {
+  if (!gripCtx) return;
+  const h = clampPanelH(gripCtx.startH + (gripCtx.startY - e.clientY));
+  ctlPanels.style.setProperty('--panel-h', `${h}px`);
+});
+const endGripDrag = () => {
+  if (!gripCtx) return;
+  gripCtx = null;
+  localStorage.setItem(PANEL_H_KEY, String(Math.round(ctlPanels.getBoundingClientRect().height)));
+};
+panelGrip.addEventListener('pointerup', endGripDrag);
+panelGrip.addEventListener('pointercancel', endGripDrag);
+
 // --------------------------------------------------------------- mode
 
 els.modeSeg.addEventListener('click', (e) => {
