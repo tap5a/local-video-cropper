@@ -65,6 +65,7 @@ const els = {
   errorBox: $('error-box'),
   dzError: $('dz-error'),
   newFileBtn: $('new-file-btn'),
+  logoBtn: $('logo-btn'),
   zoomGroup: $('zoom-group'),
   zoomSlider: $('zoom-slider'),
   zoomVal: $('zoom-val'),
@@ -241,13 +242,15 @@ els.dropZone.addEventListener('drop', (e) => {
   if (file) loadFile(file);
 });
 
-els.newFileBtn.addEventListener('click', () => {
+function backToStart() {
   els.video.pause();
   els.editor.hidden = true;
   els.dropZone.hidden = false;
   els.fileInput.value = '';
   clearResult();
-});
+}
+els.newFileBtn.addEventListener('click', backToStart);
+els.logoBtn.addEventListener('click', backToStart);
 
 function clearResult() {
   if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
