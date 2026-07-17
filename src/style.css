@@ -495,6 +495,8 @@ button.ghost:hover { color: var(--text); }
    items of #controls, exactly as before the wrapper existed. */
 #ctl-tabs { display: none; }
 #panel-grip { display: none; }
+.kbd-long { display: none; } /* "In"/"Out" long labels: mobile only; desktop shows the I/O key caps */
+#ctl-sheet { display: contents; }
 #ctl-panels { display: contents; }
 .result-head { display: none; }
 #result-scrim {
@@ -534,24 +536,65 @@ button.ghost:hover { color: var(--text); }
   #kbd-hints .kbd { font-size: 12px; padding: 9px 0; flex: 1; max-width: 64px; margin: 0; }
   .kbd-desc, #kbd-hints .kbd[data-action="play"] { display: none; }
 
-  /* controls: tabbed bottom panel */
+  /* controls: the mode segmented control straight on the dark background,
+     then one card with tabs + panel + export */
   #controls {
     width: 100%;
-    padding: 10px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-    gap: 10px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    gap: 8px;
     overflow: visible;
   }
-  #ctl-tabs { display: flex; }
+  .kbd-long { display: inline; }
+  #ctl-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  /* underline-style tabs, full-bleed across the card top, so they read
+     as views of the panel below — not as another mode selector */
+  #ctl-tabs {
+    display: flex;
+    margin: -10px -10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  #ctl-tabs button {
+    flex: 1;
+    position: relative;
+    background: transparent;
+    border: none;
+    padding: 10px 2px;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  #ctl-tabs button.active { color: var(--text); }
+  #ctl-tabs button.active::after {
+    content: "";
+    position: absolute;
+    left: 22%; right: 22%;
+    bottom: -1px;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--accent);
+  }
+  #ctl-tabs button:disabled { opacity: 0.35; cursor: default; }
   .ctl-hint { display: none; }
 
-  /* drag grip: resize the panel area (and thus the video) by dragging */
+  /* drag grip between video and timeline: resize the video/panel split */
   #panel-grip {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 16px;
-    margin: -8px 0 -6px;
+    margin: 0 0 -8px;
     touch-action: none;
     cursor: ns-resize;
   }
@@ -562,7 +605,6 @@ button.ghost:hover { color: var(--text); }
     background: var(--border-strong);
   }
   .seg button { padding: 8px 2px; }
-  .seg button:disabled { opacity: 0.35; cursor: default; }
 
   /* fixed-height panel area so switching tabs never resizes the video */
   #ctl-panels {
@@ -575,8 +617,8 @@ button.ghost:hover { color: var(--text); }
   }
   #ctl-panels > [data-tab] { display: none; }
   #ctl-panels > .ctl-group[data-tab].tab-active { display: flex; }
-  #controls > button[data-tab] { display: none; }
-  #controls > button[data-tab].tab-active { display: block; }
+  #ctl-sheet > button[data-tab] { display: none; }
+  #ctl-sheet > button[data-tab].tab-active { display: block; }
 
   /* aspect ratios: one horizontally-scrolling row of chips */
   .aspect-grid { display: flex; overflow-x: auto; scrollbar-width: none; }
@@ -615,6 +657,7 @@ button.ghost:hover { color: var(--text); }
   #editor { flex-direction: row; gap: 8px; }
   #controls { width: 250px; flex-shrink: 0; overflow-y: auto; }
   #panel-grip { display: none; }
+  #ctl-sheet { flex: 1; min-height: 0; }
   #ctl-panels { height: auto; flex: 1; min-height: 80px; }
   #stage-outer { min-height: 0; }
 }

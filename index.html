@@ -55,6 +55,9 @@
           </div>
         </div>
 
+        <!-- Drag grip: resizes the video/panel split in the mobile layout -->
+        <div id="panel-grip" aria-hidden="true"><div class="grip-bar"></div></div>
+
         <!-- Timeline / trim -->
         <div id="timeline">
           <button id="play-btn" title="Play / pause (Space)">
@@ -79,7 +82,7 @@
           <span>Out <b id="time-end">0:00.00</b> · Length <b id="time-length">0:00.00</b></span>
         </div>
         <div id="kbd-hints">
-          <button class="kbd" data-action="in" title="Set trim in point (I)">I</button><span class="kbd-desc">/</span><button class="kbd" data-action="out" title="Set trim out point (O)">O</button> <span class="kbd-desc">set in/out point
+          <button class="kbd" data-action="in" title="Set trim in point (I)">I<span class="kbd-long">n</span></button><span class="kbd-desc">/</span><button class="kbd" data-action="out" title="Set trim out point (O)">O<span class="kbd-long">ut</span></button> <span class="kbd-desc">set in/out point
           &nbsp;·&nbsp;</span>
           <button class="kbd" data-action="back" title="Step 0.01s back (←)">←</button><button class="kbd" data-action="fwd" title="Step 0.01s forward (→)">→</button> <span class="kbd-desc">step 0.01&#8202;s
           &nbsp;·&nbsp;</span>
@@ -88,8 +91,6 @@
       </div>
 
       <aside id="controls">
-        <!-- Drag grip: resizes the panel area in the mobile layout -->
-        <div id="panel-grip" aria-hidden="true"><div class="grip-bar"></div></div>
         <div class="ctl-group">
           <label class="ctl-label">Mode</label>
           <div class="seg" id="mode-seg">
@@ -100,11 +101,13 @@
           <p class="ctl-hint" id="mode-hint">Cut out a region of the frame.</p>
         </div>
 
+        <!-- Everything below Mode: rendered as a second card on mobile -->
+        <div id="ctl-sheet">
         <!-- Tab strip: only visible in the compact/mobile layout -->
-        <div id="ctl-tabs" class="seg">
+        <div id="ctl-tabs">
           <button data-tab-btn="aspect" class="active">Aspect</button>
           <button data-tab-btn="adjust">Adjust</button>
-          <button data-tab-btn="more">More</button>
+          <button data-tab-btn="more">Overlay</button>
         </div>
 
         <div id="ctl-panels">
@@ -188,6 +191,7 @@
         <div id="error-box" hidden></div>
 
         <button id="new-file-btn" class="ghost" data-tab="more">Open another video</button>
+        </div><!-- /ctl-sheet -->
       </aside>
     </section>
   </main>

@@ -516,8 +516,10 @@ function setMode(mode) {
   els.colorGroup.hidden = mode !== 'color';
   els.modeHint.textContent = MODE_HINTS[mode];
   // Crop mode has no slider adjustments, so its Adjust tab would be empty.
-  els.ctlTabs.querySelector('[data-tab-btn="adjust"]').disabled = !fit;
-  setCtlTab(fit ? 'adjust' : 'aspect');
+  // Stay on the current tab otherwise — no auto-switching.
+  const adjustBtn = els.ctlTabs.querySelector('[data-tab-btn="adjust"]');
+  adjustBtn.disabled = !fit;
+  if (!fit && adjustBtn.classList.contains('active')) setCtlTab('aspect');
   if (fit && state.aspect === 'free') setAspect('original');
   renderAspectButtons();
   updateOverlayPreview();
@@ -931,6 +933,7 @@ els.shareBtn.addEventListener('click', async () => {
 // ------------------------------------------------------------------- init
 
 renderAspectButtons();
+setCtlTab('aspect');
 setMode('crop');
 
 // test hook for automated verification
