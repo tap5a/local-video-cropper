@@ -58,6 +58,8 @@ const els = {
   progressFill: $('progress-fill'),
   progressText: $('progress-text'),
   result: $('result'),
+  resultScrim: $('result-scrim'),
+  resultClose: $('result-close'),
   resultVideo: $('result-video'),
   downloadLink: $('download-link'),
   shareBtn: $('share-btn'),
@@ -66,6 +68,7 @@ const els = {
   dzError: $('dz-error'),
   newFileBtn: $('new-file-btn'),
   logoBtn: $('logo-btn'),
+  ctlTabs: $('ctl-tabs'),
   zoomGroup: $('zoom-group'),
   zoomSlider: $('zoom-slider'),
   zoomVal: $('zoom-val'),
@@ -257,9 +260,13 @@ function clearResult() {
   state.resultUrl = null;
   state.resultFile = null;
   els.result.hidden = true;
+  els.result.classList.remove('open');
+  els.resultScrim.hidden = true;
   els.shareBtn.hidden = true;
   els.resultVideo.removeAttribute('src');
 }
+els.resultClose.addEventListener('click', clearResult);
+els.resultScrim.addEventListener('click', clearResult);
 
 // ------------------------------------------------------------ stage layout
 
@@ -428,6 +435,28 @@ const endCropDrag = () => { dragCtx = null; };
 els.cropRect.addEventListener('pointerup', endCropDrag);
 els.cropRect.addEventListener('pointercancel', endCropDrag);
 
+// ------------------------------------------------------- control tabs
+// Only visible in the compact/mobile layout; on desktop all groups are
+// always shown, so the class toggles here are inert there.
+
+const compactLayout = window.matchMedia(
+  '(max-width: 860px), (max-width: 1000px) and (max-height: 500px)'
+);
+
+function setCtlTab(tab) {
+  for (const b of els.ctlTabs.querySelectorAll('button')) {
+    b.classList.toggle('active', b.dataset.tabBtn === tab);
+  }
+  for (const el of document.querySelectorAll('#controls [data-tab]')) {
+    el.classList.toggle('tab-active', el.dataset.tab === tab);
+  }
+}
+
+els.ctlTabs.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-tab-btn]');
+  if (btn && !btn.disabled) setCtlTab(btn.dataset.tabBtn);
+});
+
 // --------------------------------------------------------------- mode
 
 els.modeSeg.addEventListener('click', (e) => {
@@ -454,6 +483,9 @@ function setMode(mode) {
   els.blurGroup.hidden = mode !== 'blur';
   els.colorGroup.hidden = mode !== 'color';
   els.modeHint.textContent = MODE_HINTS[mode];
+  // Crop mode has no slider adjustments, so its Adjust tab would be empty.
+  els.ctlTabs.querySelector('[data-tab-btn="adjust"]').disabled = !fit;
+  setCtlTab(fit ? 'adjust' : 'aspect');
   if (fit && state.aspect === 'free') setAspect('original');
   renderAspectButtons();
   updateOverlayPreview();
@@ -831,6 +863,11 @@ async function doExport() {
 
     els.resultInfo.textContent = `${outW}×${outH} · ${codec.toUpperCase()} · ${fmtSize(blob.size)}`;
     els.result.hidden = false;
+    if (compactLayout.matches) {
+      // bottom sheet: render offscreen first so the slide-up transition runs
+      els.resultScrim.hidden = false;
+      requestAnimationFrame(() => els.result.classList.add('open'));
+    }
   } catch (err) {
     if (!/cancel/i.test(err.message)) {
       console.error(err);

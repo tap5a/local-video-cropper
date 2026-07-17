@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Tap5a Local Video Cropper</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
@@ -79,11 +79,11 @@
           <span>Out <b id="time-end">0:00.00</b> · Length <b id="time-length">0:00.00</b></span>
         </div>
         <div id="kbd-hints">
-          <button class="kbd" data-action="in" title="Set trim in point (I)">I</button>/<button class="kbd" data-action="out" title="Set trim out point (O)">O</button> set in/out point
-          &nbsp;·&nbsp;
-          <button class="kbd" data-action="back" title="Step 0.01s back (←)">←</button><button class="kbd" data-action="fwd" title="Step 0.01s forward (→)">→</button> step 0.01&#8202;s
-          &nbsp;·&nbsp;
-          <button class="kbd" data-action="play" title="Play / pause (Space)">Space</button> play
+          <button class="kbd" data-action="in" title="Set trim in point (I)">I</button><span class="kbd-desc">/</span><button class="kbd" data-action="out" title="Set trim out point (O)">O</button> <span class="kbd-desc">set in/out point
+          &nbsp;·&nbsp;</span>
+          <button class="kbd" data-action="back" title="Step 0.01s back (←)">←</button><button class="kbd" data-action="fwd" title="Step 0.01s forward (→)">→</button> <span class="kbd-desc">step 0.01&#8202;s
+          &nbsp;·&nbsp;</span>
+          <button class="kbd" data-action="play" title="Play / pause (Space)">Space</button> <span class="kbd-desc">play</span>
         </div>
       </div>
 
@@ -98,12 +98,20 @@
           <p class="ctl-hint" id="mode-hint">Cut out a region of the frame.</p>
         </div>
 
-        <div class="ctl-group">
+        <!-- Tab strip: only visible in the compact/mobile layout -->
+        <div id="ctl-tabs" class="seg">
+          <button data-tab-btn="aspect" class="active">Aspect</button>
+          <button data-tab-btn="adjust">Adjust</button>
+          <button data-tab-btn="more">More</button>
+        </div>
+
+        <div id="ctl-panels">
+        <div class="ctl-group" data-tab="aspect">
           <label class="ctl-label">Aspect ratio</label>
           <div class="aspect-grid" id="aspect-grid"></div>
         </div>
 
-        <div class="ctl-group" id="zoom-group" hidden>
+        <div class="ctl-group" id="zoom-group" data-tab="adjust" hidden>
           <label class="ctl-label">Center zoom <span id="zoom-val">0</span></label>
           <input type="range" id="zoom-slider" min="0" max="100" value="0" />
           <p class="ctl-hint">Scales the video up so it crops in from the sides. 100 fills the frame completely.</p>
@@ -112,14 +120,14 @@
           <p class="ctl-hint">With zoom above 0, slides the video to pick the visible part (−1 left/top, 1 right/bottom).</p>
         </div>
 
-        <div class="ctl-group" id="blur-group" hidden>
+        <div class="ctl-group" id="blur-group" data-tab="adjust" hidden>
           <label class="ctl-label">Background blur <span id="blur-val">40</span></label>
           <input type="range" id="blur-slider" min="0" max="100" value="40" />
           <label class="ctl-label">Background brightness <span id="brightness-val">100</span></label>
           <input type="range" id="brightness-slider" min="0" max="100" value="100" />
         </div>
 
-        <div class="ctl-group" id="color-group" hidden>
+        <div class="ctl-group" id="color-group" data-tab="adjust" hidden>
           <label class="ctl-label">Background color</label>
           <div class="color-row">
             <input type="color" id="color-picker" value="#000000" />
@@ -127,7 +135,7 @@
           </div>
         </div>
 
-        <div class="ctl-group">
+        <div class="ctl-group" data-tab="more">
           <label class="ctl-label">Overlay</label>
           <button id="overlay-btn" class="secondary">Add PNG overlay</button>
           <div id="overlay-row" hidden>
@@ -138,7 +146,7 @@
           <input type="file" id="overlay-input" accept="image/png,image/webp" hidden />
         </div>
 
-        <div class="ctl-group">
+        <div class="ctl-group" data-tab="more">
           <label class="ctl-label">Quality</label>
           <select id="quality-select">
             <option value="medium">Medium (smaller file)</option>
@@ -147,12 +155,13 @@
           </select>
         </div>
 
-        <div class="ctl-group">
+        <div class="ctl-group" data-tab="more">
           <div class="out-info">
             <span id="src-info"></span>
             <span id="out-info"></span>
           </div>
         </div>
+        </div><!-- /ctl-panels -->
 
         <button id="export-btn" class="primary">Export MP4</button>
         <button id="cancel-btn" hidden>Cancel export</button>
@@ -162,7 +171,12 @@
           <span id="progress-text">0%</span>
         </div>
 
+        <div id="result-scrim" hidden></div>
         <div id="result" hidden>
+          <div class="result-head">
+            <b>Export ready</b>
+            <button id="result-close" aria-label="Close">✕</button>
+          </div>
           <video id="result-video" controls playsinline></video>
           <a id="download-link" class="primary btn-link" download>Save video</a>
           <button id="share-btn" class="secondary" hidden>Share / save to Photos…</button>
@@ -171,7 +185,7 @@
 
         <div id="error-box" hidden></div>
 
-        <button id="new-file-btn" class="ghost">Open another video</button>
+        <button id="new-file-btn" class="ghost" data-tab="more">Open another video</button>
       </aside>
     </section>
   </main>
