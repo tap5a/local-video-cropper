@@ -187,25 +187,31 @@ export function exportVideo(opts, onProgress) {
       const height = Math.round(Math.min(crop.h, srcH - top));
       outW = evenDim(width);
       outH = evenDim(height);
+      // Don't use mediabunny's `crop` option: it crops via drawImage with a
+      // source sub-rectangle on a VideoFrame, which Safari ignores (the whole
+      // frame gets squeezed into the output). Instead draw the full frame
+      // offset/scaled so the crop region fills the canvas — destination-only
+      // coordinates, the same path the fit modes use, which works everywhere.
+      const canvas = new OffscreenCanvas(outW, outH);
+      const ctx = canvas.getContext('2d');
       videoOptions = {
-        crop: { left, top, width, height },
-        width: outW,
-        height: outH,
-        fit: 'fill',
-      };
-      if (overlay) {
-        // sample arrives already cropped+resized; draw it, then the overlay
-        const canvas = new OffscreenCanvas(outW, outH);
-        const ctx = canvas.getContext('2d');
-        videoOptions.process = (sample) => {
+        process: (sample) => {
+          const scaleX = outW / width;
+          const scaleY = outH / height;
           ctx.clearRect(0, 0, outW, outH);
-          sample.draw(ctx, 0, 0, outW, outH);
-          drawOverlayContain(ctx, overlay, outW, outH);
+          sample.draw(
+            ctx,
+            -left * scaleX,
+            -top * scaleY,
+            sample.displayWidth * scaleX,
+            sample.displayHeight * scaleY
+          );
+          if (overlay) drawOverlayContain(ctx, overlay, outW, outH);
           return canvas;
-        };
-        videoOptions.processedWidth = outW;
-        videoOptions.processedHeight = outH;
-      }
+        },
+        processedWidth: outW,
+        processedHeight: outH,
+      };
     } else {
       const targetAspect = aspect ?? srcW / srcH;
       ({ outW, outH } = fitOutputDims(srcW, srcH, targetAspect));
