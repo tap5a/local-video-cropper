@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://local-video-cropper.tap5a.io/sitemap.xml
