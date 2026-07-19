@@ -557,6 +557,10 @@ const fallbackPreviewCanvas = document.createElement('canvas');
 
 function drawPreviewFrame() {
   if (!previewCtx || !state.srcW) return;
+  // Mid-seek, Firefox's drawImage(video) paints nothing (no current frame
+  // until seeked fires), so repainting while scrubbing blinks the composite.
+  // Keep the last painted frame; the rAF loop repaints right after the seek.
+  if (els.video.seeking || els.video.readyState < 2) return;
   const cw = els.blurPreview.width;
   const ch = els.blurPreview.height;
   const bg = state.mode === 'blur'
